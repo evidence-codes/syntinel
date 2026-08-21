@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+.DS_Store
+
+# Syntinel scan artifacts
+.syntinel_cache/
+syntinel-report.md
+syntinel-report.json
+*.db

@@ -1,0 +1,54 @@
+[project]
+name = "syntinel"
+version = "0.1.0"
+description = "Adversarial AI-powered code security scanner"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "pydantic-settings>=2.2",
+    "python-dotenv>=1.0",
+    "typer>=0.12",
+    "rich>=13.0",
+    "pathspec>=0.12",
+    "tenacity>=8.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "respx",
+    "ruff",
+]
+# Optional deterministic static-analysis engine. The CLI degrades gracefully
+# to an LLM-only scan when Semgrep is not installed.
+semgrep = [
+    "semgrep>=1.0",
+]
+
+[project.scripts]
+syntinel = "syntinel.cli.main:app"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+# Only ship the syntinel package — never the intentionally-vulnerable demo app.
+include = ["syntinel*"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# Typer requires function calls (typer.Option/Argument) as parameter defaults.
+"syntinel/cli/main.py" = ["B008"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["syntinel/tests"]
