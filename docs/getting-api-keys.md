@@ -1,7 +1,7 @@
 # Getting an API key
 
 Syntinel's LLM engine calls [Groq](https://console.groq.com) for fast,
-cheap inference against Qwen 2.5 Coder.
+cheap inference against `qwen/qwen3.6-27b`.
 
 1. Create a free account at https://console.groq.com
 2. Generate an API key under **API Keys**

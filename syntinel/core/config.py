@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 
     groq_api_key: str = ""
-    groq_model: str = "qwen-2.5-coder-32b"
+    groq_model: str = "qwen/qwen3.6-27b"
     groq_base_url: str = "https://api.groq.com/openai/v1"
     # Some models (e.g. Kimi's reasoning models) only accept temperature=1.
     groq_temperature: float = 0.0
