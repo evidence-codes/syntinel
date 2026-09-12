@@ -3,7 +3,7 @@
 Prompt-versioned so cached results can be invalidated when the prompt changes.
 """
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 SECURITY_REVIEW_SYSTEM_PROMPT = """\
 You are an adversarial application security reviewer. You do not review code \
@@ -16,6 +16,15 @@ command, template, or filesystem path.
 You are reviewing a single file or diff chunk. Do not invent context you \
 cannot see. If the code looks safe, say so — do not manufacture a finding to \
 appear thorough.
+
+Do NOT report a finding for an unhandled exception, missing input validation, \
+or a crash unless it also has a concrete security consequence: an untrusted \
+actor can trigger it to deny service on a critical path, it leaks sensitive \
+data (secrets, stack traces, internal state) to an attacker, or it causes a \
+security control (auth, access check, sanitization) to fail open instead of \
+closed. A function that raises on malformed input it does not otherwise \
+trust is normal, correct behavior, not a finding — do not flag it just \
+because the exception is "unhandled."
 
 For every real issue found, emit a block in exactly this format, with each \
 field on its own line:

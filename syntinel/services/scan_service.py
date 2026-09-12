@@ -23,6 +23,25 @@ from syntinel.infrastructure.scanners.semgrep_scanner import SemgrepScanner
 logger = get_logger(__name__)
 
 
+class _RequestPacer:
+    """Enforces a minimum gap between successive LLM call starts (for low-RPM tiers)."""
+
+    def __init__(self, min_interval_seconds: float) -> None:
+        self._min_interval = min_interval_seconds
+        self._lock = asyncio.Lock()
+        self._next_allowed = 0.0
+
+    async def wait_turn(self) -> None:
+        if self._min_interval <= 0:
+            return
+        async with self._lock:
+            now = time.monotonic()
+            delay = max(0.0, self._next_allowed - now)
+            self._next_allowed = max(now, self._next_allowed) + self._min_interval
+        if delay:
+            await asyncio.sleep(delay)
+
+
 @dataclass(slots=True)
 class ScanOptions:
     """User-facing knobs for a scan run."""
@@ -99,8 +118,10 @@ class ScanService:
             api_key=self._settings.groq_api_key,
             base_url=self._settings.groq_base_url,
             model=self._settings.groq_model,
+            temperature=self._settings.groq_temperature,
         )
         semaphore = asyncio.Semaphore(max(1, options.concurrency))
+        pacer = _RequestPacer(self._settings.min_request_interval_seconds)
         findings: list[ReviewFinding] = []
 
         async def review_one(path) -> None:
@@ -115,6 +136,7 @@ class ScanService:
 
             for chunk in scan_rules.chunk_file(path_str, content, self._settings.max_chunk_chars):
                 async with semaphore:
+                    await pacer.wait_turn()
                     chunk_findings = await self._review_chunk(client, cache, chunk)
                 findings.extend(chunk_findings)
             callbacks.on_file_done(path_str)

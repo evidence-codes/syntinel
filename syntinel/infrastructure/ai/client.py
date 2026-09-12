@@ -28,12 +28,14 @@ class AIClient:
         base_url: str,
         model: str,
         max_diff_chars: int = 24000,
-        timeout: float = 60.0,
+        timeout: float = 120.0,
+        temperature: float = 0.0,
     ) -> None:
         self._api_key = api_key
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._max_diff_chars = max_diff_chars
+        self._temperature = temperature
         self._client = httpx.AsyncClient(timeout=timeout)
 
     async def __aenter__(self) -> "AIClient":
@@ -67,7 +69,7 @@ class AIClient:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "temperature": 0.0,
+            "temperature": self._temperature,
         }
         headers = {"Authorization": f"Bearer {self._api_key}"}
 
@@ -81,6 +83,10 @@ class AIClient:
             ) from exc
         except httpx.HTTPError as exc:
             raise AIClientError(f"Model API request failed: {exc}") from exc
+        except OSError as exc:
+            # Covers ssl.SSLError and other transport-level failures that
+            # httpx doesn't wrap as HTTPError (e.g. connection reset mid-stream).
+            raise AIClientError(f"Model API transport error: {exc}") from exc
 
         data = response.json()
         try:

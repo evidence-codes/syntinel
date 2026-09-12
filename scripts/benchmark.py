@@ -30,7 +30,11 @@ CLEAN_FILES = ["clean/safe_queries.py", "clean/safe_orders.py", "clean/password_
 async def run_once() -> dict:
     settings = Settings()
     service = ScanService(settings)
-    options = ScanOptions(use_semgrep=True, use_llm=bool(settings.groq_api_key))
+    options = ScanOptions(
+        use_semgrep=True,
+        use_llm=bool(settings.groq_api_key),
+        concurrency=settings.scan_concurrency,
+    )
     report = await service.scan(str(DEMO_ROOT), options)
 
     flagged = {str(Path(f.file_path).resolve()) for f in report.findings}
